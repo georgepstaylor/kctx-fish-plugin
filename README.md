@@ -5,6 +5,7 @@ A [Fisher](https://github.com/jorgebucaran/fisher) plugin for switching Kubernet
 ## Features
 
 - Session-local context switching via a temporary kubeconfig copy
+- Refreshes from source kubeconfig on every run to get latest contexts and credentials
 - Fuzzy search with [fzf](https://github.com/junegunn/fzf)
 - Preview panel showing cluster ARN, AWS profile, and namespace
 - Tab completions
@@ -31,3 +32,11 @@ kctx my-cluster-context
 ```
 
 Context changes are isolated to the current shell. Open a new terminal and it starts fresh!
+
+### Custom Source Config
+
+By default, `kctx` syncs from `~/.kube/config`. To use a different source:
+
+```fish
+set -gx KUBECONFIG_SOURCE /path/to/your/kubeconfig
+```

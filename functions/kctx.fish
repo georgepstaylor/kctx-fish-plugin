@@ -2,14 +2,26 @@ function kctx --description "Switch kube context for this shell session only"
     # For each shell session, keep a point in time snapshot of the kube config
     if not set -q _KCTX_SESSION_CONFIG
         set -gx _KCTX_SESSION_CONFIG (mktemp /tmp/kubeconfig-session-XXXXXX)
-        # Use KUBECONFIG env var to overwrite the config file location
-        set source_config ~/.kube/config
-        if set -q KUBECONFIG; and test -f "$KUBECONFIG"
-            set source_config $KUBECONFIG
+
+        # Determine and save the source config before we overwrite KUBECONFIG
+        if set -q KUBECONFIG_SOURCE
+            set -gx _KCTX_SOURCE_CONFIG $KUBECONFIG_SOURCE
+        else if set -q KUBECONFIG; and test -f "$KUBECONFIG"
+            set -gx _KCTX_SOURCE_CONFIG $KUBECONFIG
+        else
+            set -gx _KCTX_SOURCE_CONFIG ~/.kube/config
         end
-        cp $source_config $_KCTX_SESSION_CONFIG
+
         set -gx KUBECONFIG $_KCTX_SESSION_CONFIG
-        echo "(session-local kubeconfig initialised from $source_config)"
+        echo "(session-local kubeconfig initialised from $_KCTX_SOURCE_CONFIG)"
+    end
+
+    # Update from source config on every run to get latest contexts/credentials
+    if test -f "$_KCTX_SOURCE_CONFIG"
+        cp $_KCTX_SOURCE_CONFIG $_KCTX_SESSION_CONFIG
+    else
+        echo "Warning: source config not found at $_KCTX_SOURCE_CONFIG"
+        return 1
     end
 
     # Use the first arg or show fzf picker
